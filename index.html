@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image to Base64 converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+       
+        .file-input-container {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        #imageInput {
+            display: none;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .file-input-label:hover {
+            background-color: #45a049;
+        }
+
+        .file-input-label:active {
+            background-color: #388e3c;
+        }
+
+ 
+        #base64Output {
+            word-wrap: break-word;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-family: monospace;
+            font-size: 14px;
+            color: #333;
+            white-space: pre-wrap;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            height: 80px; /* Begrenze die Höhe */
+            line-height: 1.2;
+            margin-bottom: 20px;
+            word-break: break-word;
+        }
+
+       
+        .copy-button {
+            background-color: #ccc;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: not-allowed;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .copy-button.active {
+            background-color: #4CAF50;
+            cursor: pointer;
+        }
+
+        .copy-button:hover {
+            background-color: #45a049;
+        }
+
+        .copy-button:active {
+            background-color: #388e3c;
+        }
+
+       
+        #copyMessage {
+            font-size: 14px;
+            color: #777;
+            margin-top: 10px;
+            display: none; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Convert image to Base64</h1>
+
+        <div class="file-input-container">
+            <input type="file" id="imageInput" accept="image/*">
+            <label for="imageInput" class="file-input-label">Select Image</label>
+        </div>
+
+        <p id="base64Output"></p>
+        <button id="copyButton" class="copy-button" disabled>Copy</button>
+        <p id="copyMessage">Copied to clipboard<br> Info: WE DO NOT STORE THE UPLOADED IMAGES</p>
+    </div>
+
+    <script>
+        document.getElementById('imageInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            
+            if (!file) {
+                alert("Please select an image!");
+                return;
+            }
+
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const img = new Image();
+                
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+
+                    const base64String = canvas.toDataURL('image/png');
+
+                   
+                    const truncatedBase64 = base64String.length > 200 ? base64String.substring(0, 200) + "..." : base64String;
+                    document.getElementById('base64Output').textContent = truncatedBase64;
+
+             
+                    const copyButton = document.getElementById('copyButton');
+                    copyButton.disabled = false;
+                    copyButton.classList.add('active');
+
+                   
+                    copyButton.onclick = function() {
+                        navigator.clipboard.writeText(base64String)
+                            .then(() => {
+                          
+                                const copyMessage = document.getElementById('copyMessage');
+                                copyMessage.style.display = 'block';
+                                
+                               
+                                setTimeout(() => {
+                                    copyMessage.style.display = 'none';
+                                }, 20000);
+                            })
+                            .catch((err) => {
+                                console.error('Can not copy:', err);
+                            });
+                    };
+                };
+
+                img.onerror = function() {
+                    alert("There was an error loading the image.");
+                    console.error("Can not load image.");
+                };
+
+                img.src = e.target.result;
+            };
+
+            reader.onerror = function() {
+                alert("There was an error reading the file.");
+                console.error("Can not read file.");
+            };
+
+            reader.readAsDataURL(file);
+        });
+    </script>
+</body>
+</html>
