@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image to Base64 converter</title>
+    <title>Image to Base64 Converter</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -23,6 +23,12 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 600px;
+            border: 2px dashed #ccc;
+            transition: border-color 0.3s;
+        }
+
+        .container.dragover {
+            border-color: #4CAF50;
         }
 
         h1 {
@@ -31,7 +37,6 @@
             color: #333;
         }
 
-       
         .file-input-container {
             position: relative;
             display: inline-block;
@@ -62,7 +67,6 @@
             background-color: #388e3c;
         }
 
- 
         #base64Output {
             word-wrap: break-word;
             margin-top: 20px;
@@ -77,14 +81,20 @@
             max-width: 100%;
             overflow: hidden;
             text-overflow: ellipsis;
-            height: 80px; /* Begrenze die Höhe */
+            height: 80px;
             line-height: 1.2;
             margin-bottom: 20px;
             word-break: break-word;
         }
 
-       
-        .copy-button {
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .action-button {
             background-color: #ccc;
             color: white;
             border: none;
@@ -95,31 +105,30 @@
             transition: background-color 0.3s;
         }
 
-        .copy-button.active {
+        .action-button.active {
             background-color: #4CAF50;
             cursor: pointer;
         }
 
-        .copy-button:hover {
+        .action-button:hover {
             background-color: #45a049;
         }
 
-        .copy-button:active {
+        .action-button:active {
             background-color: #388e3c;
         }
 
-       
         #copyMessage {
             font-size: 14px;
             color: #777;
             margin-top: 10px;
-            display: none; 
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Convert image to Base64</h1>
+    <div class="container" id="dropZone">
+        <h1>Convert Image to Base64</h1>
 
         <div class="file-input-container">
             <input type="file" id="imageInput" accept="image/*">
@@ -127,24 +136,54 @@
         </div>
 
         <p id="base64Output"></p>
-        <button id="copyButton" class="copy-button" disabled>Copy</button>
-        <p id="copyMessage">Copied to clipboard<br> Info: WE DO NOT STORE THE UPLOADED IMAGES</p>
+
+        <div class="button-container">
+            <button id="copyButton" class="action-button" disabled>Copy</button>
+            <button id="saveButton" class="action-button" disabled>Save as .txt</button>
+        </div>
+
+        <p id="copyMessage">Base 64 string copied to clipboard</p>
     </div>
 
     <script>
+        const dropZone = document.getElementById('dropZone');
+
+        dropZone.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (event) => {
+            event.preventDefault();
+            dropZone.classList.remove('dragover');
+
+            const file = event.dataTransfer.files[0];
+            if (file) {
+                handleFile(file);
+            } else {
+                alert("Please drop a valid image file.");
+            }
+        });
+
         document.getElementById('imageInput').addEventListener('change', function(event) {
             const file = event.target.files[0];
-            
-            if (!file) {
-                alert("Please select an image!");
-                return;
+            if (file) {
+                handleFile(file);
+            } else {
+                alert("Please select an image.");
             }
+        });
 
+        function handleFile(file) {
             const reader = new FileReader();
 
             reader.onload = function(e) {
                 const img = new Image();
-                
+
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
@@ -154,49 +193,57 @@
 
                     const base64String = canvas.toDataURL('image/png');
 
-                   
-                    const truncatedBase64 = base64String.length > 200 ? base64String.substring(0, 200) + "..." : base64String;
+                    const truncatedBase64 = base64String.length > 100 ? base64String.substring(0, 100) + "..." : base64String;
                     document.getElementById('base64Output').textContent = truncatedBase64;
 
-             
                     const copyButton = document.getElementById('copyButton');
+                    const saveButton = document.getElementById('saveButton');
+
                     copyButton.disabled = false;
                     copyButton.classList.add('active');
 
-                   
+                    saveButton.disabled = false;
+                    saveButton.classList.add('active');
+
                     copyButton.onclick = function() {
                         navigator.clipboard.writeText(base64String)
                             .then(() => {
-                          
                                 const copyMessage = document.getElementById('copyMessage');
                                 copyMessage.style.display = 'block';
-                                
-                               
                                 setTimeout(() => {
                                     copyMessage.style.display = 'none';
-                                }, 20000);
+                                }, 3000);
                             })
                             .catch((err) => {
-                                console.error('Can not copy:', err);
+                                console.error('Fehler beim Kopieren:', err);
                             });
+                    };
+
+                    saveButton.onclick = function() {
+                        const fileName = file.name.split('.').slice(0, -1).join('.') + "-Base64.txt";
+                        const blob = new Blob([base64String], { type: 'text/plain' });
+                        const link = document.createElement('a');
+                        link.href = URL.createObjectURL(blob);
+                        link.download = fileName;
+                        link.click();
                     };
                 };
 
                 img.onerror = function() {
-                    alert("There was an error loading the image.");
-                    console.error("Can not load image.");
+                    alert("Error while loading image.");
+                    console.error("There was an error while loading the image.");
                 };
 
                 img.src = e.target.result;
             };
 
             reader.onerror = function() {
-                alert("There was an error reading the file.");
-                console.error("Can not read file.");
+                alert("Error while reading the file.");
+                console.error("Error while reading file.");
             };
 
             reader.readAsDataURL(file);
-        });
+        }
     </script>
 </body>
 </html>
