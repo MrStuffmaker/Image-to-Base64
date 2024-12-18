@@ -3,6 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:title" content="Image to Base64 Converter">
+    <meta property="og:description" content="Easily convert your images to Base64 format using drag-and-drop or file selection. Copy or save the output in one click.">
+    <meta property="og:url" content="https://base64.stuffmaker.org">
+    <meta property="og:type" content="website">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Image to Base64 Converter">
+    <meta name="twitter:description" content="Convert images to Base64 format effortlessly. Drag, drop, and copy the result.">
     <title>Image to Base64 Converter</title>
     <style>
         body {
@@ -87,6 +95,15 @@
             word-break: break-word;
         }
 
+        #imagePreview {
+            margin-top: 20px;
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: none;
+        }
+
         .button-container {
             display: flex;
             justify-content: center;
@@ -137,17 +154,20 @@
 
         <p id="base64Output"></p>
 
+        <img id="imagePreview" alt="Image Preview">
+
         <div class="button-container">
             <button id="copyButton" class="action-button" disabled>Copy</button>
             <button id="saveButton" class="action-button" disabled>Save as .txt</button>
         </div>
-
+        <br>
+<footer><a href="https://stuffmaker.org" target="_blank">Made by Stuffmaker</a></footer>
         <p id="copyMessage">Base 64 string copied to clipboard</p>
-        <footer> <a href="https://stuffmaker.org" target="_blank">powered by stuffmaker</a> </footer>
     </div>
 
     <script>
         const dropZone = document.getElementById('dropZone');
+        const imagePreview = document.getElementById('imagePreview');
 
         dropZone.addEventListener('dragover', (event) => {
             event.preventDefault();
@@ -197,6 +217,9 @@
                     const truncatedBase64 = base64String.length > 100 ? base64String.substring(0, 100) + "..." : base64String;
                     document.getElementById('base64Output').textContent = truncatedBase64;
 
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+
                     const copyButton = document.getElementById('copyButton');
                     const saveButton = document.getElementById('saveButton');
 
@@ -221,7 +244,7 @@
                     };
 
                     saveButton.onclick = function() {
-                        const fileName = file.name.split('.').slice(0, -1).join('.') + "-Base64.txt";
+                        const fileName = file.name.split('.').slice(0, -1).join('.') + "-Base64.stuffmaker.org.txt";
                         const blob = new Blob([base64String], { type: 'text/plain' });
                         const link = document.createElement('a');
                         link.href = URL.createObjectURL(blob);
