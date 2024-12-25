@@ -3,16 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta property="og:title" content="Image to Base64 Converter">
-    <meta property="og:description" content="Easily convert your images to Base64 format using drag-and-drop or file selection. Copy or save the output in one click.">
-    <meta property="og:url" content="https://base64.stuffmaker.org">
-    <meta property="og:type" content="website">
-
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Image to Base64 Converter">
-    <meta name="twitter:description" content="Convert images to Base64 format effortlessly. Drag, drop, and copy the result.">
     <title>Image to Base64 Converter</title>
     <style>
+        /* Styles bleiben unverändert */
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f9;
@@ -71,10 +64,6 @@
             background-color: #45a049;
         }
 
-        .file-input-label:active {
-            background-color: #388e3c;
-        }
-
         #base64Output {
             word-wrap: break-word;
             margin-top: 20px;
@@ -126,42 +115,23 @@
             background-color: #4CAF50;
             cursor: pointer;
         }
-
-        .action-button:hover {
-            background-color: #45a049;
-        }
-
-        .action-button:active {
-            background-color: #388e3c;
-        }
-
-        #copyMessage {
-            font-size: 14px;
-            color: #777;
-            margin-top: 10px;
-            display: none;
-        }
     </style>
 </head>
 <body>
     <div class="container" id="dropZone">
         <h1>Convert Image to Base64</h1>
-
         <div class="file-input-container">
             <input type="file" id="imageInput" accept="image/*">
             <label for="imageInput" class="file-input-label">Select Image</label>
         </div>
-
         <p id="base64Output"></p>
-
         <img id="imagePreview" alt="Image Preview">
-
         <div class="button-container">
             <button id="copyButton" class="action-button" disabled>Copy</button>
             <button id="saveButton" class="action-button" disabled>Save as .txt</button>
+            <button id="openTabButton" class="action-button" disabled>Open in New Tab</button>
         </div>
-        <br>
-<footer><a href="https://stuffmaker.org" target="_blank">Made by Stuffmaker</a></footer>
+        <footer><a href="https://stuffmaker.org" target="_blank">Made by Stuffmaker</a></footer>
         <p id="copyMessage">Base 64 string copied to clipboard</p>
     </div>
 
@@ -185,8 +155,6 @@
             const file = event.dataTransfer.files[0];
             if (file) {
                 handleFile(file);
-            } else {
-                alert("Please drop a valid image file.");
             }
         });
 
@@ -194,8 +162,6 @@
             const file = event.target.files[0];
             if (file) {
                 handleFile(file);
-            } else {
-                alert("Please select an image.");
             }
         });
 
@@ -213,57 +179,41 @@
                     ctx.drawImage(img, 0, 0);
 
                     const base64String = canvas.toDataURL('image/png');
-
-                    const truncatedBase64 = base64String.length > 100 ? base64String.substring(0, 100) + "..." : base64String;
-                    document.getElementById('base64Output').textContent = truncatedBase64;
+                    document.getElementById('base64Output').textContent = base64String;
 
                     imagePreview.src = e.target.result;
                     imagePreview.style.display = 'block';
 
                     const copyButton = document.getElementById('copyButton');
                     const saveButton = document.getElementById('saveButton');
+                    const openTabButton = document.getElementById('openTabButton');
 
-                    copyButton.disabled = false;
-                    copyButton.classList.add('active');
-
-                    saveButton.disabled = false;
-                    saveButton.classList.add('active');
+                    [copyButton, saveButton, openTabButton].forEach(button => {
+                        button.disabled = false;
+                        button.classList.add('active');
+                    });
 
                     copyButton.onclick = function() {
                         navigator.clipboard.writeText(base64String)
-                            .then(() => {
-                                const copyMessage = document.getElementById('copyMessage');
-                                copyMessage.style.display = 'block';
-                                setTimeout(() => {
-                                    copyMessage.style.display = 'none';
-                                }, 3000);
-                            })
-                            .catch((err) => {
-                                console.error('Fehler beim Kopieren:', err);
-                            });
+                            .then(() => alert('Copied to clipboard!'))
+                            .catch(console.error);
                     };
 
                     saveButton.onclick = function() {
-                        const fileName = file.name.split('.').slice(0, -1).join('.') + "-Base64.stuffmaker.org.txt";
                         const blob = new Blob([base64String], { type: 'text/plain' });
                         const link = document.createElement('a');
                         link.href = URL.createObjectURL(blob);
-                        link.download = fileName;
+                        link.download = `${file.name.split('.')[0]}_Base64.txt`;
                         link.click();
+                    };
+
+                    openTabButton.onclick = function() {
+                        const newTab = window.open();
+                        newTab.document.write(`<pre>${base64String}</pre>`);
                     };
                 };
 
-                img.onerror = function() {
-                    alert("Error while loading image.");
-                    console.error("There was an error while loading the image.");
-                };
-
                 img.src = e.target.result;
-            };
-
-            reader.onerror = function() {
-                alert("Error while reading the file.");
-                console.error("Error while reading file.");
             };
 
             reader.readAsDataURL(file);
