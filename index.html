@@ -131,6 +131,7 @@
             <button id="saveButton" class="action-button" disabled>Save as .txt</button>
             <button id="openTabButton" class="action-button" disabled>Open in New Tab</button>
         </div>
+        <br>
         <footer><a href="https://stuffmaker.org" target="_blank">Made by Stuffmaker</a></footer>
         <p id="copyMessage">Base 64 string copied to clipboard</p>
     </div>
@@ -209,7 +210,7 @@
 
                     openTabButton.onclick = function() {
                         const newTab = window.open();
-                        newTab.document.write(`<pre>${base64String}</pre>`);
+                        newTab.document.write(`<prev>${base64String}</prev>`);
                     };
                 };
 
